@@ -44,7 +44,7 @@ button.MouseButton1Click:Connect(function()
 		button.Text = "STOP"
 
 		StarterGui:SetCore("SendNotification", {
-			Title = "TP Script",
+			Title = "Script",
 			Text = "Started",
 			Duration = 2
 		})
@@ -53,9 +53,9 @@ button.MouseButton1Click:Connect(function()
 		if stopCooldown then return end
 
 		stopCooldown = true
-		button.Text = "STOP (5s)"
+		button.Text = "STOP (WAIT 10S)"
 
-		task.wait(5)
+		task.wait(10)
 
 		aktif = false
 		stopCooldown = false
@@ -85,7 +85,6 @@ player:GetPropertyChangedSignal("Team"):Connect(function()
 	end
 end)
 
--- SENİN ORİJİNAL TP (DEĞİŞMEDİ)
 while task.wait(0.2) do
 	if aktif and hrp and hrp.Parent then
 		hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 10)
