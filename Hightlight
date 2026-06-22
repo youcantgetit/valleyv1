@@ -1,0 +1,52 @@
+local Players = game:GetService("Players")
+
+local function applyHighlight(character, player)
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "TeamHighlight"
+	highlight.FillTransparency = 0.3
+	highlight.OutlineTransparency = 0
+
+	if player.Team then
+		if player.Team.Name == "Department of Corrections" then
+			highlight.FillColor = Color3.fromRGB(0, 120, 255)
+			highlight.OutlineColor = Color3.fromRGB(0, 120, 255)
+
+		elseif player.Team.Name == "State Police" then
+			highlight.FillColor = Color3.fromRGB(255, 255, 255)
+			highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+		else
+			highlight:Destroy()
+			return
+		end
+	end
+
+	highlight.Parent = character
+end
+
+local function onCharacterAdded(character, player)
+	local old = character:FindFirstChild("TeamHighlight")
+	if old then old:Destroy() end
+	applyHighlight(character, player)
+end
+
+local function setupPlayer(player)
+	player.CharacterAdded:Connect(function(character)
+		onCharacterAdded(character, player)
+	end)
+
+	if player.Character then
+		onCharacterAdded(player.Character, player)
+	end
+
+	player:GetPropertyChangedSignal("Team"):Connect(function()
+		if player.Character then
+			onCharacterAdded(player.Character, player)
+		end
+	end)
+end
+
+Players.PlayerAdded:Connect(setupPlayer)
+
+for _, player in ipairs(Players:GetPlayers()) do
+	setupPlayer(player)
+end
