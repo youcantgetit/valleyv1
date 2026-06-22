@@ -1,0 +1,93 @@
+local player = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local aktif = false
+local stopCooldown = false
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "TP_GUI"
+gui.ResetOnSpawn = false
+gui.Parent = game.CoreGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 120)
+frame.Position = UDim2.new(1, -220, 1, -140)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1, 0, 0, 40)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(255,255,255)
+label.Text = "Guide Start"
+label.TextScaled = true
+label.Parent = frame
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(1, -20, 0, 50)
+button.Position = UDim2.new(0, 10, 0, 50)
+button.BackgroundColor3 = Color3.fromRGB(60,60,60)
+button.TextColor3 = Color3.fromRGB(255,255,255)
+button.TextScaled = true
+button.Text = "START"
+button.Parent = frame
+
+button.MouseButton1Click:Connect(function()
+	if not aktif then
+		aktif = true
+		button.Text = "STOP"
+
+		StarterGui:SetCore("SendNotification", {
+			Title = "TP Script",
+			Text = "Started",
+			Duration = 2
+		})
+
+	else
+		if stopCooldown then return end
+
+		stopCooldown = true
+		button.Text = "STOP (5s)"
+
+		task.wait(5)
+
+		aktif = false
+		stopCooldown = false
+		button.Text = "START"
+
+		StarterGui:SetCore("SendNotification", {
+			Title = "TP Script",
+			Text = "Stopped",
+			Duration = 2
+		})
+	end
+end)
+
+-- Character refresh
+player.CharacterAdded:Connect(function(c)
+	char = c
+	hrp = c:WaitForChild("HumanoidRootPart")
+end)
+
+-- Escapee reset
+player:GetPropertyChangedSignal("Team"):Connect(function()
+	if player.Team and player.Team.Name == "Escapee" then
+		local h = char and char:FindFirstChildOfClass("Humanoid")
+		if h then
+			h.Health = 0
+		end
+	end
+end)
+
+-- SENİN ORİJİNAL TP (DEĞİŞMEDİ)
+while task.wait(0.2) do
+	if aktif and hrp and hrp.Parent then
+		hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 10)
+	end
+end
