@@ -1,0 +1,662 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local Stats = game:GetService("Stats")
+
+local LocalPlayer = Players.LocalPlayer
+
+----------------------------------------------------------------
+-- BİLDİRİM SİSTEMİ
+----------------------------------------------------------------
+local NotifGui = Instance.new("ScreenGui")
+NotifGui.Name = "PHNotifs"
+NotifGui.ResetOnSpawn = false
+NotifGui.Parent = game.CoreGui
+
+local NotifHolder = Instance.new("Frame")
+NotifHolder.Parent = NotifGui
+NotifHolder.AnchorPoint = Vector2.new(1, 0)
+NotifHolder.Position = UDim2.new(1, -16, 0, 16)
+NotifHolder.Size = UDim2.new(0, 270, 1, -32)
+NotifHolder.BackgroundTransparency = 1
+
+local NLayout = Instance.new("UIListLayout")
+NLayout.Parent = NotifHolder
+NLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+NLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+NLayout.Padding = UDim.new(0, 6)
+NLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local nCount = 0
+local typeColors = {
+    info    = Color3.fromRGB(80, 140, 255),
+    success = Color3.fromRGB(80, 210, 130),
+    warning = Color3.fromRGB(255, 185, 60),
+    error   = Color3.fromRGB(255, 75, 75),
+}
+
+local function Notify(title, body, ntype, dur)
+    ntype = ntype or "info"
+    dur   = dur or 4
+    nCount += 1
+    local accent = typeColors[ntype] or typeColors.info
+
+    local card = Instance.new("Frame")
+    card.LayoutOrder = nCount
+    card.Size = UDim2.new(1, 0, 0, 62)
+    card.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    card.BackgroundTransparency = 1
+    card.BorderSizePixel = 0
+    card.ClipsDescendants = true
+    card.Parent = NotifHolder
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 3, 1, 0)
+    bar.BackgroundColor3 = accent
+    bar.BackgroundTransparency = 1
+    bar.BorderSizePixel = 0
+    bar.Parent = card
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 6)
+
+    local pad = Instance.new("UIPadding")
+    pad.PaddingLeft = UDim.new(0, 12)
+    pad.PaddingRight = UDim.new(0, 10)
+    pad.PaddingTop = UDim.new(0, 8)
+    pad.Parent = card
+
+    local tl = Instance.new("TextLabel")
+    tl.Size = UDim2.new(1, 0, 0, 16)
+    tl.BackgroundTransparency = 1
+    tl.Text = title
+    tl.TextColor3 = Color3.new(1, 1, 1)
+    tl.Font = Enum.Font.GothamBold
+    tl.TextSize = 13
+    tl.TextXAlignment = Enum.TextXAlignment.Left
+    tl.TextTransparency = 1
+    tl.Parent = card
+
+    local bl = Instance.new("TextLabel")
+    bl.Size = UDim2.new(1, 0, 0, 28)
+    bl.Position = UDim2.new(0, 0, 0, 18)
+    bl.BackgroundTransparency = 1
+    bl.Text = body or ""
+    bl.TextColor3 = Color3.fromRGB(185, 185, 185)
+    bl.Font = Enum.Font.Gotham
+    bl.TextSize = 12
+    bl.TextWrapped = true
+    bl.TextXAlignment = Enum.TextXAlignment.Left
+    bl.TextTransparency = 1
+    bl.Parent = card
+
+    local ti = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
+    TweenService:Create(card, ti, {BackgroundTransparency = 0}):Play()
+    TweenService:Create(bar,  ti, {BackgroundTransparency = 0}):Play()
+    TweenService:Create(tl,   ti, {TextTransparency = 0}):Play()
+    TweenService:Create(bl,   ti, {TextTransparency = 0}):Play()
+
+    task.delay(dur, function()
+        if not card.Parent then return end
+        local fo = TweenInfo.new(0.25)
+        TweenService:Create(card, fo, {BackgroundTransparency = 1}):Play()
+        TweenService:Create(bar,  fo, {BackgroundTransparency = 1}):Play()
+        TweenService:Create(tl,   fo, {TextTransparency = 1}):Play()
+        TweenService:Create(bl,   fo, {TextTransparency = 1}):Play()
+        task.wait(0.25)
+        TweenService:Create(card, TweenInfo.new(0.18), {Size = UDim2.new(1, 0, 0, 0)}):Play()
+        task.wait(0.2)
+        card:Destroy()
+    end)
+end
+
+----------------------------------------------------------------
+-- ANA GUI
+----------------------------------------------------------------
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "PremiumHub"
+Gui.ResetOnSpawn = false
+Gui.Parent = game.CoreGui
+
+local Main = Instance.new("Frame")
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.Size = UDim2.new(0, 0, 0, 0)
+Main.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Parent = Gui
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+TweenService:Create(Main, TweenInfo.new(0.45, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 680, 0, 420)}):Play()
+
+local isOpen = true
+local function setOpen(v)
+    isOpen = v
+    if v then
+        Main.Visible = true
+        TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 680, 0, 420)}):Play()
+    else
+        local t = TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 0, 0, 0)})
+        t:Play()
+        t.Completed:Connect(function() if not isOpen then Main.Visible = false end end)
+    end
+end
+
+UIS.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    if i.KeyCode == Enum.KeyCode.K then setOpen(not isOpen) end
+end)
+
+-- DRAG
+local drag, dragStart, dragStartPos = false, nil, nil
+Main.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag = true
+        dragStart = i.Position
+        dragStartPos = Main.Position
+        i.Changed:Connect(function()
+            if i.UserInputState == Enum.UserInputState.End then drag = false end
+        end)
+    end
+end)
+UIS.InputChanged:Connect(function(i)
+    if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local d = i.Position - dragStart
+        Main.Position = UDim2.new(dragStartPos.X.Scale, dragStartPos.X.Offset + d.X, dragStartPos.Y.Scale, dragStartPos.Y.Offset + d.Y)
+    end
+end)
+
+----------------------------------------------------------------
+-- SIDEBAR
+----------------------------------------------------------------
+local Side = Instance.new("Frame")
+Side.Size = UDim2.new(0, 160, 1, 0)
+Side.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Side.BorderSizePixel = 0
+Side.Parent = Main
+Instance.new("UICorner", Side).CornerRadius = UDim.new(0, 10)
+
+local ok, thumb = pcall(function()
+    return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+end)
+
+local Avatar = Instance.new("ImageLabel")
+Avatar.Size = UDim2.new(0, 72, 0, 72)
+Avatar.Position = UDim2.new(0.5, -36, 0, 18)
+Avatar.Image = ok and thumb or ""
+Avatar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Avatar.BorderSizePixel = 0
+Avatar.Parent = Side
+Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
+
+local NameLabel = Instance.new("TextLabel")
+NameLabel.Size = UDim2.new(1, 0, 0, 20)
+NameLabel.Position = UDim2.new(0, 0, 0, 96)
+NameLabel.BackgroundTransparency = 1
+NameLabel.Text = LocalPlayer.Name
+NameLabel.TextColor3 = Color3.new(1, 1, 1)
+NameLabel.Font = Enum.Font.GothamBold
+NameLabel.TextSize = 14
+NameLabel.Parent = Side
+
+local sideLine = Instance.new("Frame")
+sideLine.Size = UDim2.new(0.8, 0, 0, 1)
+sideLine.Position = UDim2.new(0.1, 0, 0, 122)
+sideLine.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+sideLine.BorderSizePixel = 0
+sideLine.Parent = Side
+
+local function makeTabBtn(label, y)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -20, 0, 36)
+    b.Position = UDim2.new(0, 10, 0, y)
+    b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    b.TextColor3 = Color3.fromRGB(200, 200, 200)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 13
+    b.Text = label
+    b.BorderSizePixel = 0
+    b.Parent = Side
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 7)
+    return b
+end
+
+local MainBtn    = makeTabBtn("MAIN",    135)
+local PlayersBtn = makeTabBtn("PLAYERS", 178)
+
+----------------------------------------------------------------
+-- CONTENT
+----------------------------------------------------------------
+local Content = Instance.new("Frame")
+Content.Position = UDim2.new(0, 160, 0, 0)
+Content.Size = UDim2.new(1, -160, 1, 0)
+Content.BackgroundTransparency = 1
+Content.Parent = Main
+
+local MainTab = Instance.new("Frame")
+MainTab.Size = UDim2.fromScale(1, 1)
+MainTab.BackgroundTransparency = 1
+MainTab.Parent = Content
+
+local PlayersTab = Instance.new("Frame")
+PlayersTab.Size = UDim2.fromScale(1, 1)
+PlayersTab.BackgroundTransparency = 1
+PlayersTab.Visible = false
+PlayersTab.Parent = Content
+
+local function switchTab(toMain)
+    MainTab.Visible = toMain
+    PlayersTab.Visible = not toMain
+    MainBtn.TextColor3    = toMain and Color3.new(1,1,1) or Color3.fromRGB(180,180,180)
+    PlayersBtn.TextColor3 = not toMain and Color3.new(1,1,1) or Color3.fromRGB(180,180,180)
+end
+
+MainBtn.MouseButton1Click:Connect(function() switchTab(true) end)
+PlayersBtn.MouseButton1Click:Connect(function() switchTab(false) end)
+switchTab(true)
+
+----------------------------------------------------------------
+-- MAIN TAB
+----------------------------------------------------------------
+local WelcomeLabel = Instance.new("TextLabel")
+WelcomeLabel.Size = UDim2.new(1, -30, 0, 30)
+WelcomeLabel.Position = UDim2.new(0, 15, 0, 14)
+WelcomeLabel.BackgroundTransparency = 1
+WelcomeLabel.Text = "Welcome, " .. LocalPlayer.Name
+WelcomeLabel.TextColor3 = Color3.new(1, 1, 1)
+WelcomeLabel.Font = Enum.Font.GothamBold
+WelcomeLabel.TextSize = 20
+WelcomeLabel.TextXAlignment = Enum.TextXAlignment.Left
+WelcomeLabel.Parent = MainTab
+
+local divider = Instance.new("Frame")
+divider.Size = UDim2.new(1, -30, 0, 1)
+divider.Position = UDim2.new(0, 15, 0, 48)
+divider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+divider.BorderSizePixel = 0
+divider.Parent = MainTab
+
+-- FPS kutusu
+local FpsFrame = Instance.new("Frame")
+FpsFrame.Size = UDim2.new(0.46, -20, 0, 60)
+FpsFrame.Position = UDim2.new(0, 15, 0, 58)
+FpsFrame.BackgroundColor3 = Color3.fromRGB(19, 19, 19)
+FpsFrame.BorderSizePixel = 0
+FpsFrame.Parent = MainTab
+Instance.new("UICorner", FpsFrame).CornerRadius = UDim.new(0, 8)
+
+local FpsTitle = Instance.new("TextLabel")
+FpsTitle.Size = UDim2.new(1, -12, 0, 18)
+FpsTitle.Position = UDim2.new(0, 12, 0, 8)
+FpsTitle.BackgroundTransparency = 1
+FpsTitle.Text = "FPS"
+FpsTitle.TextColor3 = Color3.fromRGB(130, 130, 130)
+FpsTitle.Font = Enum.Font.GothamBold
+FpsTitle.TextSize = 11
+FpsTitle.TextXAlignment = Enum.TextXAlignment.Left
+FpsTitle.Parent = FpsFrame
+
+local FpsVal = Instance.new("TextLabel")
+FpsVal.Size = UDim2.new(1, -12, 0, 26)
+FpsVal.Position = UDim2.new(0, 12, 0, 28)
+FpsVal.BackgroundTransparency = 1
+FpsVal.Text = "---"
+FpsVal.TextColor3 = Color3.new(1, 1, 1)
+FpsVal.Font = Enum.Font.GothamBold
+FpsVal.TextSize = 20
+FpsVal.TextXAlignment = Enum.TextXAlignment.Left
+FpsVal.Parent = FpsFrame
+
+-- Ping kutusu
+local PingFrame = Instance.new("Frame")
+PingFrame.Size = UDim2.new(0.46, -10, 0, 60)
+PingFrame.Position = UDim2.new(0.5, 0, 0, 58)
+PingFrame.BackgroundColor3 = Color3.fromRGB(19, 19, 19)
+PingFrame.BorderSizePixel = 0
+PingFrame.Parent = MainTab
+Instance.new("UICorner", PingFrame).CornerRadius = UDim.new(0, 8)
+
+local PingTitle = Instance.new("TextLabel")
+PingTitle.Size = UDim2.new(1, -12, 0, 18)
+PingTitle.Position = UDim2.new(0, 12, 0, 8)
+PingTitle.BackgroundTransparency = 1
+PingTitle.Text = "PING"
+PingTitle.TextColor3 = Color3.fromRGB(130, 130, 130)
+PingTitle.Font = Enum.Font.GothamBold
+PingTitle.TextSize = 11
+PingTitle.TextXAlignment = Enum.TextXAlignment.Left
+PingTitle.Parent = PingFrame
+
+local PingVal = Instance.new("TextLabel")
+PingVal.Size = UDim2.new(1, -12, 0, 26)
+PingVal.Position = UDim2.new(0, 12, 0, 28)
+PingVal.BackgroundTransparency = 1
+PingVal.Text = "---"
+PingVal.TextColor3 = Color3.new(1, 1, 1)
+PingVal.Font = Enum.Font.GothamBold
+PingVal.TextSize = 20
+PingVal.TextXAlignment = Enum.TextXAlignment.Left
+PingVal.Parent = PingFrame
+
+-- FPS güncelle
+local fpsT, fpsN = 0, 0
+RunService.RenderStepped:Connect(function(dt)
+    fpsN += 1
+    fpsT += dt
+    if fpsT >= 0.5 then
+        FpsVal.Text = math.round(fpsN / fpsT) .. " fps"
+        fpsN, fpsT = 0, 0
+    end
+end)
+
+-- Ping güncelle
+task.spawn(function()
+    while task.wait(2) do
+        local ok2, ping = pcall(function()
+            return math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        end)
+        PingVal.Text = ok2 and (ping .. " ms") or "-- ms"
+    end
+end)
+
+-- Buton fabrikası
+local function makeBtn(labelText, y)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -30, 0, 42)
+    b.Position = UDim2.new(0, 15, 0, y)
+    b.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 14
+    b.Text = labelText
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.Parent = MainTab
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+    b.MouseEnter:Connect(function()
+        TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+    end)
+    b.MouseLeave:Connect(function()
+        TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(22, 22, 22)}):Play()
+    end)
+    return b
+end
+
+-- REJOIN
+local RejoinBtn = makeBtn("Rejoin", 132)
+RejoinBtn.MouseButton1Click:Connect(function()
+    Notify("Rejoin", "Rejoining...", "info", 3)
+    task.wait(1.2)
+    TeleportService:Teleport(game.PlaceId, LocalPlayer)
+end)
+
+-- ESCAPE
+local escapeUsed = false
+local EscapeBtn = makeBtn("Escape", 182)
+
+EscapeBtn.MouseButton1Click:Connect(function()
+    if escapeUsed then
+        Notify("Escape", "Already running!", "warning", 2)
+        return
+    end
+    escapeUsed = true
+    EscapeBtn.Text = "Escape  (under work)"
+    Notify("Escape", "Started.", "success", 3)
+
+    -- FIX 1: task.spawn doğru şekilde açılıp kapatıldı
+    task.spawn(function()
+        local player = game.Players.LocalPlayer
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp = char:WaitForChild("HumanoidRootPart")
+
+        local TARGET_POS = Vector3.new(-39.9715576171875, 11.220773696899414, -103.20159149169922)
+        local TRIGGER_DISTANCE = 10
+
+        local scriptTriggered = false
+        local aktif = false
+
+        -- TRACER
+        local tracerPart = Instance.new("Part")
+        tracerPart.Size = Vector3.new(2, 2, 2)
+        tracerPart.Position = TARGET_POS
+        tracerPart.Anchored = true
+        tracerPart.CanCollide = false
+        tracerPart.Transparency = 0.5
+        tracerPart.BrickColor = BrickColor.new("Bright red")
+        tracerPart.Material = Enum.Material.Neon
+        tracerPart.Shape = Enum.PartType.Ball
+        tracerPart.Parent = workspace
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(0, 120, 0, 40)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = tracerPart
+
+        local tracerLabel = Instance.new("TextLabel")
+        tracerLabel.Size = UDim2.new(1, 0, 1, 0)
+        tracerLabel.BackgroundTransparency = 1
+        tracerLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+        tracerLabel.TextStrokeTransparency = 0
+        tracerLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        tracerLabel.Text = "COME HERE"
+        tracerLabel.TextScaled = true
+        tracerLabel.Font = Enum.Font.GothamBold
+        tracerLabel.Parent = billboard
+
+        -- HUD
+        local hudGui = Instance.new("ScreenGui")
+        hudGui.Name = "TracerHUD"
+        hudGui.ResetOnSpawn = false
+        hudGui.Parent = game.CoreGui
+
+        local arrowLabel = Instance.new("TextLabel")
+        arrowLabel.Size = UDim2.new(0, 220, 0, 50)
+        arrowLabel.AnchorPoint = Vector2.new(0.5, 0)
+        arrowLabel.Position = UDim2.new(0.5, 0, 0, 10)
+        arrowLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        arrowLabel.BackgroundTransparency = 0.3
+        arrowLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        arrowLabel.Text = "Go there"
+        arrowLabel.TextScaled = true
+        arrowLabel.Font = Enum.Font.GothamBold
+        arrowLabel.BorderSizePixel = 0
+        arrowLabel.Parent = hudGui
+
+        local uiCorner = Instance.new("UICorner")
+        uiCorner.CornerRadius = UDim.new(0, 8)
+        uiCorner.Parent = arrowLabel
+
+        -- KARARMA + GERİ SAYIM
+        local blackGui = Instance.new("ScreenGui")
+        blackGui.Name = "BlackScreen"
+        blackGui.ResetOnSpawn = false
+        blackGui.Enabled = false
+        blackGui.Parent = game.CoreGui
+
+        local blackFrame = Instance.new("Frame")
+        blackFrame.Size = UDim2.new(1, 0, 1, 0)
+        blackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        blackFrame.BorderSizePixel = 0
+        blackFrame.Parent = blackGui
+
+        local waitLabel = Instance.new("TextLabel")
+        waitLabel.Size = UDim2.new(1, 0, 0, 80)
+        waitLabel.Position = UDim2.new(0, 0, 0.4, 0)
+        waitLabel.BackgroundTransparency = 1
+        waitLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        waitLabel.Text = "WAIT A SEC..."
+        waitLabel.TextScaled = true
+        waitLabel.Font = Enum.Font.GothamBold
+        waitLabel.Parent = blackFrame
+
+        local countLabel = Instance.new("TextLabel")
+        countLabel.Size = UDim2.new(1, 0, 0, 100)
+        countLabel.Position = UDim2.new(0, 0, 0.55, 0)
+        countLabel.BackgroundTransparency = 1
+        countLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        countLabel.Text = "10"
+        countLabel.TextScaled = true
+        countLabel.Font = Enum.Font.Gotham
+        countLabel.Parent = blackFrame
+
+        -- CHARACTER REFRESH
+        player.CharacterAdded:Connect(function(c)
+            char = c
+            hrp = c:WaitForChild("HumanoidRootPart")
+            scriptTriggered = false
+            aktif = false
+        end)
+
+        player:GetPropertyChangedSignal("Team"):Connect(function()
+            if player.Team and player.Team.Name == "Escapee" then
+                local h = char and char:FindFirstChildOfClass("Humanoid")
+                if h then
+                    h.Health = 0
+                end
+            end
+        end)
+
+        -- Hedefe varınca geri sayım + script başlat
+        local function onTriggered()
+            scriptTriggered = true
+            arrowLabel.Visible = false
+            tracerPart.Transparency = 1
+            billboard.Enabled = false
+
+            blackGui.Enabled = true
+            aktif = true
+
+            for i = 10, 0, -1 do
+                countLabel.Text = tostring(i)
+                task.wait(1)
+            end
+
+            blackGui.Enabled = false
+            aktif = false
+        end
+
+        -- ANA DÖNGÜ
+        -- FIX 2: Ana döngü task.spawn içinde, ayrı spawn ile çalışıyor
+        task.spawn(function()
+            while task.wait(0.2) do
+                if hrp and hrp.Parent and not scriptTriggered then
+                    local dist = (hrp.Position - TARGET_POS).Magnitude
+                    arrowLabel.Text = string.format("Goto there! (%.1f m)", dist)
+
+                    if dist <= TRIGGER_DISTANCE then
+                        onTriggered()
+                    end
+                end
+            end
+        end)
+
+        -- FIX 3: İlerleme döngüsü ayrı bir spawn içinde, ana thread'i bloke etmiyor
+        task.spawn(function()
+            while task.wait(0.2) do
+                if aktif and hrp and hrp.Parent then
+                    hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 10)
+                end
+            end
+        end)
+
+    end) -- task.spawn sonu (EscapeBtn click)
+end)
+
+----------------------------------------------------------------
+-- PLAYERS TAB
+----------------------------------------------------------------
+local HighlightEnabled = false
+
+local function removeHighlights()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then
+            local h = p.Character:FindFirstChild("PHLight")
+            if h then h:Destroy() end
+        end
+    end
+end
+
+local function applyHighlight(char, plr)
+    if not HighlightEnabled then return end
+    local old = char:FindFirstChild("PHLight")
+    if old then old:Destroy() end
+    if not plr.Team then return end
+
+    local col
+    if plr.Team.Name == "Department of Corrections" then
+        col = Color3.fromRGB(0, 120, 255)
+    elseif plr.Team.Name == "State Police" then
+        col = Color3.fromRGB(255, 255, 255)
+    else
+        return
+    end
+
+    local h = Instance.new("Highlight")
+    h.Name = "PHLight"
+    h.FillColor = col
+    h.FillTransparency = 0.4
+    h.OutlineTransparency = 1
+    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    h.Parent = char
+end
+
+local HLToggle = Instance.new("TextButton")
+HLToggle.Size = UDim2.new(1, -30, 0, 42)
+HLToggle.Position = UDim2.new(0, 15, 0, 20)
+HLToggle.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+HLToggle.TextColor3 = Color3.new(1, 1, 1)
+HLToggle.Font = Enum.Font.GothamBold
+HLToggle.TextSize = 14
+HLToggle.Text = "Police Highlight  OFF"
+HLToggle.BorderSizePixel = 0
+HLToggle.AutoButtonColor = false
+HLToggle.Parent = PlayersTab
+Instance.new("UICorner", HLToggle).CornerRadius = UDim.new(0, 8)
+
+HLToggle.MouseEnter:Connect(function()
+    TweenService:Create(HLToggle, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(30,30,30)}):Play()
+end)
+HLToggle.MouseLeave:Connect(function()
+    TweenService:Create(HLToggle, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(22,22,22)}):Play()
+end)
+
+HLToggle.MouseButton1Click:Connect(function()
+    HighlightEnabled = not HighlightEnabled
+    HLToggle.Text = HighlightEnabled and "Police Highlight  ON" or "Police Highlight  OFF"
+    if HighlightEnabled then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then applyHighlight(p.Character, p) end
+        end
+        Notify("Highlight", "Glow açıldı.", "success", 3)
+    else
+        removeHighlights()
+        Notify("Highlight", "Glow kapatıldı.", "info", 3)
+    end
+end)
+
+local function setupPlayer(plr)
+    plr.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        applyHighlight(char, plr)
+    end)
+    plr:GetPropertyChangedSignal("Team"):Connect(function()
+        if plr.Character then applyHighlight(plr.Character, plr) end
+    end)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do setupPlayer(p) end
+
+Players.PlayerAdded:Connect(function(plr)
+    setupPlayer(plr)
+    Notify("Joined", plr.Name .. " joined the server.", "info", 3)
+end)
+
+-- FIX 4: Uygunsuz ifade kaldırıldı
+Players.PlayerRemoving:Connect(function(plr)
+    Notify("Left", plr.Name .. " left the server.", "warning", 3)
+end)
+
+Notify("Premium Hub", "Yüklendi. K ile aç/kapat.", "success", 4)
